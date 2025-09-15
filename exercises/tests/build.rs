@@ -2,11 +2,13 @@
 //!
 //! You should modify this file to make both exercises pass.
 
+// build.rs
 fn main() {
-    let timestamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-    println!("cargo:rustc-env=TEST_FOO={}", timestamp);
-    println!("cargo:rustc-cfg=pass"); // 设置 pass 特征
+    // 这样当 build.rs 改变时会重新运行（便于调试）
+    println!("cargo:rerun-if-changed=build.rs");
+
+    // 为编译器定义一个 cfg：feature = "pass"
+    // 这样 #[cfg(feature = "pass")] 分支会被开启
+    println!("cargo:rustc-cfg=feature=\"pass\"");
 }
+
