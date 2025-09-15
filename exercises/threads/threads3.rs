@@ -3,8 +3,7 @@
 // Execute `rustlings hint threads3` or use the `hint` watch subcommand for a
 // hint.
 
-// I AM NOT DONE
-
+// threads3.rs
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
@@ -26,26 +25,29 @@ impl Queue {
     }
 }
 
-fn send_tx(q: Queue, tx: mpsc::Sender<u32>) -> () {
+fn send_tx(q: Queue, tx: mpsc::Sender<u32>) -> (thread::JoinHandle<()>, thread::JoinHandle<()>) {
     let qc = Arc::new(q);
     let qc1 = Arc::clone(&qc);
     let qc2 = Arc::clone(&qc);
 
-    thread::spawn(move || {
-        for val in &qc1.first_half {
+    let tx2 = tx.clone();                 // 关键：clone
+    let h1 = thread::spawn(move || {
+        for &val in &qc1.first_half {
             println!("sending {:?}", val);
-            tx.send(*val).unwrap();
+            tx.send(val).unwrap();
             thread::sleep(Duration::from_secs(1));
         }
     });
 
-    thread::spawn(move || {
-        for val in &qc2.second_half {
+    let h2 = thread::spawn(move || {
+        for &val in &qc2.second_half {
             println!("sending {:?}", val);
-            tx.send(*val).unwrap();
+            tx2.send(val).unwrap();       // 用 tx2
             thread::sleep(Duration::from_secs(1));
         }
     });
+
+    (h1, h2)
 }
 
 fn main() {
@@ -53,7 +55,9 @@ fn main() {
     let queue = Queue::new();
     let queue_length = queue.length;
 
-    send_tx(queue, tx);
+    let (h1, h2) = send_tx(queue, tx);
+    h1.join().unwrap();
+    h2.join().unwrap();
 
     let mut total_received: u32 = 0;
     for received in rx {

@@ -2,11 +2,8 @@
 	double linked list reverse
 	This problem requires you to reverse a doubly linked list
 */
-// I AM NOT DONE
-
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
-use std::vec::*;
 
 #[derive(Debug)]
 struct Node<T> {
@@ -24,6 +21,7 @@ impl<T> Node<T> {
         }
     }
 }
+
 #[derive(Debug)]
 struct LinkedList<T> {
     length: u32,
@@ -72,9 +70,35 @@ impl<T> LinkedList<T> {
             },
         }
     }
-	pub fn reverse(&mut self){
-		// TODO
-	}
+
+    /// 反转双向链表的核心实现
+    pub fn reverse(&mut self) {
+        // 空链表或只有1个节点，无需反转
+        if self.length <= 1 {
+            return;
+        }
+
+        let mut current = self.start; // 从原头节点开始遍历
+        let mut temp: Option<NonNull<Node<T>>>; // 临时存储指针，移除未使用的初始化
+
+        // 遍历所有节点，交换每个节点的prev和next
+        while let Some(current_ptr) = current {
+            unsafe {
+                // 1. 保存当前节点的next指针（后续要作为下一个遍历对象）
+                temp = (*current_ptr.as_ptr()).next;
+
+                // 2. 交换当前节点的prev和next
+                (*current_ptr.as_ptr()).next = (*current_ptr.as_ptr()).prev;
+                (*current_ptr.as_ptr()).prev = temp;
+
+                // 3. 移动current到原next节点（即temp存储的指针）
+                current = temp;
+            }
+        }
+
+        // 3. 交换链表的start和end指针（原头变尾，原尾变头）
+        std::mem::swap(&mut self.start, &mut self.end);
+    }
 }
 
 impl<T> Display for LinkedList<T>
@@ -122,38 +146,57 @@ mod tests {
         list_str.add("B".to_string());
         list_str.add("C".to_string());
         println!("Linked List is {}", list_str);
-        assert_eq!(3, list_str.length);
+        assert_eq!(3, list_str.length); // 修复：使用正确的变量名list_str
     }
 
     #[test]
     fn test_reverse_linked_list_1() {
-		let mut list = LinkedList::<i32>::new();
-		let original_vec = vec![2,3,5,11,9,7];
-		let reverse_vec = vec![7,9,11,5,3,2];
-		for i in 0..original_vec.len(){
-			list.add(original_vec[i]);
-		}
-		println!("Linked List is {}", list);
-		list.reverse();
-		println!("Reversed Linked List is {}", list);
-		for i in 0..original_vec.len(){
-			assert_eq!(reverse_vec[i],*list.get(i as i32).unwrap());
-		}
-	}
+        let mut list = LinkedList::<i32>::new();
+        let original_vec = vec![2, 3, 5, 11, 9, 7];
+        let reverse_vec = vec![7, 9, 11, 5, 3, 2];
+        for &val in &original_vec {
+            list.add(val);
+        }
+        println!("Linked List is {}", list);
+        list.reverse();
+        println!("Reversed Linked List is {}", list);
+        for (i, &target) in reverse_vec.iter().enumerate() {
+            assert_eq!(target, *list.get(i as i32).unwrap());
+        }
+    }
 
-	#[test]
-	fn test_reverse_linked_list_2() {
-		let mut list = LinkedList::<i32>::new();
-		let original_vec = vec![34,56,78,25,90,10,19,34,21,45];
-		let reverse_vec = vec![45,21,34,19,10,90,25,78,56,34];
-		for i in 0..original_vec.len(){
-			list.add(original_vec[i]);
-		}
-		println!("Linked List is {}", list);
-		list.reverse();
-		println!("Reversed Linked List is {}", list);
-		for i in 0..original_vec.len(){
-			assert_eq!(reverse_vec[i],*list.get(i as i32).unwrap());
-		}
-	}
+    #[test]
+    fn test_reverse_linked_list_2() {
+        let mut list = LinkedList::<i32>::new();
+        let original_vec = vec![34, 56, 78, 25, 90, 10, 19, 34, 21, 45];
+        let reverse_vec = vec![45, 21, 34, 19, 10, 90, 25, 78, 56, 34];
+        for &val in &original_vec {
+            list.add(val);
+        }
+        println!("Linked List is {}", list);
+        list.reverse();
+        println!("Reversed Linked List is {}", list);
+        for (i, &target) in reverse_vec.iter().enumerate() {
+            assert_eq!(target, *list.get(i as i32).unwrap());
+        }
+    }
+
+    // 新增测试：空链表反转
+    #[test]
+    fn test_reverse_empty_list() {
+        let mut list = LinkedList::<i32>::new();
+        list.reverse(); // 无panic
+        assert_eq!(0, list.length);
+        assert!(list.get(0).is_none());
+    }
+
+    // 新增测试：单节点链表反转
+    #[test]
+    fn test_reverse_single_node() {
+        let mut list = LinkedList::<i32>::new();
+        list.add(100);
+        list.reverse();
+        assert_eq!(1, list.length);
+        assert_eq!(100, *list.get(0).unwrap());
+    }
 }

@@ -14,31 +14,33 @@
 // Execute `rustlings hint hashmaps3` or use the `hint` watch subcommand for a
 // hint.
 
-// I AM NOT DONE
-
 use std::collections::HashMap;
 
-// A structure to store the goal details of a team.
+#[derive(Default)]
 struct Team {
     goals_scored: u8,
     goals_conceded: u8,
 }
 
 fn build_scores_table(results: String) -> HashMap<String, Team> {
-    // The name of the team is the key and its associated struct is the value.
     let mut scores: HashMap<String, Team> = HashMap::new();
 
-    for r in results.lines() {
-        let v: Vec<&str> = r.split(',').collect();
-        let team_1_name = v[0].to_string();
-        let team_1_score: u8 = v[2].parse().unwrap();
-        let team_2_name = v[1].to_string();
-        let team_2_score: u8 = v[3].parse().unwrap();
-        // TODO: Populate the scores table with details extracted from the
-        // current line. Keep in mind that goals scored by team_1
-        // will be the number of goals conceded from team_2, and similarly
-        // goals scored by team_2 will be the number of goals conceded by
-        // team_1.
+    for line in results.lines() {
+        let parts: Vec<&str> = line.split(',').collect();
+        let t1_name = parts[0].to_string();
+        let t2_name = parts[1].to_string();
+        let t1_score: u8 = parts[2].parse().unwrap();
+        let t2_score: u8 = parts[3].parse().unwrap();
+
+        // 更新 team1
+        let t1 = scores.entry(t1_name).or_default();
+        t1.goals_scored += t1_score;
+        t1.goals_conceded += t2_score;
+
+        // 更新 team2
+        let t2 = scores.entry(t2_name).or_default();
+        t2.goals_scored += t2_score;
+        t2.goals_conceded += t1_score;
     }
     scores
 }
@@ -48,39 +50,34 @@ mod tests {
     use super::*;
 
     fn get_results() -> String {
-        let results = "".to_string()
-            + "England,France,4,2\n"
-            + "France,Italy,3,1\n"
-            + "Poland,Spain,2,0\n"
-            + "Germany,England,2,1\n";
-        results
+        ["England,France,4,2",
+         "France,Italy,3,1",
+         "Poland,Spain,2,0",
+         "Germany,England,2,1"]
+        .join("\n")
     }
 
     #[test]
     fn build_scores() {
         let scores = build_scores_table(get_results());
-
-        let mut keys: Vec<&String> = scores.keys().collect();
+        let mut keys: Vec<_> = scores.keys().collect();
         keys.sort();
-        assert_eq!(
-            keys,
-            vec!["England", "France", "Germany", "Italy", "Poland", "Spain"]
-        );
+        assert_eq!(keys, vec!["England", "France", "Germany", "Italy", "Poland", "Spain"]);
     }
 
     #[test]
     fn validate_team_score_1() {
         let scores = build_scores_table(get_results());
-        let team = scores.get("England").unwrap();
-        assert_eq!(team.goals_scored, 5);
-        assert_eq!(team.goals_conceded, 4);
+        let eng = scores.get("England").unwrap();
+        assert_eq!(eng.goals_scored, 5);
+        assert_eq!(eng.goals_conceded, 4);
     }
 
     #[test]
     fn validate_team_score_2() {
         let scores = build_scores_table(get_results());
-        let team = scores.get("Spain").unwrap();
-        assert_eq!(team.goals_scored, 0);
-        assert_eq!(team.goals_conceded, 2);
+        let esp = scores.get("Spain").unwrap();
+        assert_eq!(esp.goals_scored, 0);
+        assert_eq!(esp.goals_conceded, 2);
     }
 }

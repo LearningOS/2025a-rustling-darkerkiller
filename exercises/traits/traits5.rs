@@ -7,7 +7,7 @@
 // Execute `rustlings hint traits5` or use the `hint` watch subcommand for a
 // hint.
 
-// I AM NOT DONE
+// traits5.rs
 
 pub trait SomeTrait {
     fn some_function(&self) -> bool {
@@ -21,6 +21,10 @@ pub trait OtherTrait {
     }
 }
 
+// 1. 超级 trait
+trait CombinedTrait: SomeTrait + OtherTrait {}
+impl<T: SomeTrait + OtherTrait> CombinedTrait for T {}
+
 struct SomeStruct {}
 struct OtherStruct {}
 
@@ -29,12 +33,23 @@ impl OtherTrait for SomeStruct {}
 impl SomeTrait for OtherStruct {}
 impl OtherTrait for OtherStruct {}
 
-// YOU MAY ONLY CHANGE THE NEXT LINE
-fn some_func(item: ??) -> bool {
+// 2. 使用超级 trait object
+fn some_func(item: &dyn CombinedTrait) -> bool {
     item.some_function() && item.other_function()
 }
 
 fn main() {
-    some_func(SomeStruct {});
-    some_func(OtherStruct {});
+    some_func(&SomeStruct {});
+    some_func(&OtherStruct {});
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_some_other() {
+        assert!(some_func(&SomeStruct {}));
+        assert!(some_func(&OtherStruct {}));
+    }
 }

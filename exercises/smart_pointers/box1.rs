@@ -18,11 +18,9 @@
 //
 // Execute `rustlings hint box1` or use the `hint` watch subcommand for a hint.
 
-// I AM NOT DONE
-
 #[derive(PartialEq, Debug)]
 pub enum List {
-    Cons(i32, List),
+    Cons(i32, Box<List>), // 1. 用 Box 包裹递归部分
     Nil,
 }
 
@@ -35,11 +33,11 @@ fn main() {
 }
 
 pub fn create_empty_list() -> List {
-    todo!()
+    List::Nil // 2. 空列表
 }
 
 pub fn create_non_empty_list() -> List {
-    todo!()
+    List::Cons(42, Box::new(List::Nil)) // 3. 非空列表
 }
 
 #[cfg(test)]
